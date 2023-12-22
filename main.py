@@ -105,20 +105,22 @@ class OpenPlcParser:
                                     if os.path.isdir(f"D://parse//{level_1}//{level_2}//{level_3}"):
                                         print(f"         {level_4}")
     def createStructure(self,path):
-        newblock=Soup().new_tag(name="pous")
+        bss=Soup()
+        pous=bss.new_tag("pous")
+        bss.append(pous)
         for level_1 in os.listdir(path):
             path_l1=f"{path}//{level_1}";
             if os.path.isdir(path_l1):
                 for level_2 in os.listdir(path_l1):
                     path_l2=f"{path}//{level_1}//{level_2}"
                     if os.path.isdir(path_l2):
-                        pou=newblock.new_tag(name="pou")
+                        pou=bss.new_tag(name="pou")
                         pou["name"]=level_2
                         pou["poutype"]=level_1
-                        newblock.append(pou)
-        newblock.prettify()
+                        bss.pous.append(pou)
+        bss.prettify()
         with open("D://parse//newblock.xml",encoding="utf-8",mode="w") as newblock:
-            newblock.write(newblock.__str__())
+            newblock.write(str(bss))
             newblock.close()
 
 if __name__ == '__main__':
