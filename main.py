@@ -2,16 +2,22 @@ import bs4
 from bs4 import BeautifulSoup as Soup
 import os
 from shutil import rmtree
+from bs4 import NavigableString
 
 
 class OpenPlcParser:
+
     def __init__(self,path):
         self.__path=path
         with open(path,encoding="utf-8",mode="r") as openxml:
             content=openxml.read()
-        self.__parsing_tree=Soup(content,"lxml")
+        self.__parsing_tree=Soup(content,"xml")
         self.__project=self.__parsing_tree.project
         self.__pous = [pou for pou in self.__project.types.pous.children if pou.name is not None]
+        with open("D://parse//111.xml",encoding="utf-8",mode="w") as file:
+            file.write(str(self.__parsing_tree))
+            file.close()
+
 
     def showTopLevel(self):
         topLevelNames=[element.name for element in self.__project.children if element.name is not None]
@@ -21,21 +27,26 @@ class OpenPlcParser:
     def showTags(self):
         for tag in self.__topLevelTags:
             print(f"The elements name is {tag.name} and its type is {type(tag)}")
+
     def showTypes(self):
         types=[type for type in self.__project.types.children if type.name is not None]
         for type in types:
             print(type.name)
+
     def showDataTypes(self):
         datatypes = [type for type in self.__project.types.datatypes.children if type.name is not None]
         for type in datatypes:
             print(type.get("name"))
+
     def showPous(self):
        # self.__pous=[pou for pou in self.__project.types.pous.children if pou.name is not None]
         for pou in self.__pous:
             print(f"The pou name is {pou.get('name')} and its type is {pou.get('poutype')}")
+
     def showPouAttributes(self):
         for pou in self.__pous:
             print(pou.attrs)
+
     def getPouChildren(self,pou):
         return [element for element in pou.children if element.name is not None]
 
@@ -47,6 +58,7 @@ class OpenPlcParser:
         if os.path.exists(dir_path):
             rmtree(dir_path)
         os.makedirs(dir_path)
+
     def __createCatalogStructure(self):
         for pou in self.__pous:
             for element in self.getPouChildren(pou):
@@ -75,11 +87,12 @@ class OpenPlcParser:
                         docfile.write(str(area))
                         docfile.close()
             with open(f"{self.__dir_path}//{pou.get('poutype')}//{pou.get('name')}//st//st.txt",encoding="utf-8", mode="a") as stfile:
-                stfile.write(str(pou.st))
+                stfile.write(str(pou.st.get_text()))
 
     def parsePous(self):
         self.__createRootDirectory("D://parse")
         self.__createCatalogStructure()
+
     def clearPous(self,clearxml_path):
         list_pous=[pou for pou in self.__pous if pou.name is not None]
         for pou in list_pous:
@@ -88,6 +101,7 @@ class OpenPlcParser:
         with open(clearxml_path,encoding="utf-8",mode="w") as clearxml:
             clearxml.write(str(self.__parsing_tree))
             clearxml.close()
+
     def showDirectories(self):
         for level_1 in os.listdir("D://parse"):
             path=f"D://parse"+level_1
@@ -104,29 +118,47 @@ class OpenPlcParser:
                                 for level_4 in os.listdir(f"D://parse//{level_1}//{level_2}//{level_3}"):
                                     if os.path.isdir(f"D://parse//{level_1}//{level_2}//{level_3}"):
                                         print(f"         {level_4}")
+
     def createStructure(self,path):
         bss=Soup()
         pous=bss.new_tag("pous")
         bss.append(pous)
         for level_1 in os.listdir(path):
-            path_l1=f"{path}//{level_1}";
+            path_l1=f"{path}//{level_1}"
             if os.path.isdir(path_l1):
                 for level_2 in os.listdir(path_l1):
                     path_l2=f"{path}//{level_1}//{level_2}"
                     if os.path.isdir(path_l2):
+                        with open(f"{path}//{level_1}//{level_2}//st//st.txt",encoding="utf-8",mode="r") as stfile:
+                            st_block=stfile.read()
+
                         pou=bss.new_tag(name="pou")
                         pou["name"]=level_2
                         pou["poutype"]=level_1
+                        body=bss.new_tag(name="body")
+                        st=bss.new_tag(name="st")
+                        st.string=str(st_block)
+                        pou.append(body)
+                        pou.body.append(st)
                         bss.pous.append(pou)
-        bss.prettify()
-        with open("D://parse//newblock.xml",encoding="utf-8",mode="w") as newblock:
-            newblock.write(str(bss))
-            newblock.close()
+
+        with open("D://parse//clear.xml",encoding="utf-8",mode="r") as clear:
+            clear_xml=clear.read()
+
+        bs_output=Soup(clear_xml,"xml")
+        output_pous=bs_output.find_all("pous")
+        output_pous.append(bss)
+        #print(bs_output)
+        bs_output.prettify()
+
+        with open("D://parse/output.xml",encoding="utf-8",mode="w") as output:
+            output.write(str(bs_output))
+            output.close()
 
 if __name__ == '__main__':
     parser=OpenPlcParser("C://json//myexport.xml")
     #parser.showTopLevel()
     #parser.showPous()
     #parser.parsePous()
-    #parser.clearPous("D://parse//clear.xml")
+    parser.clearPous("D://parse//clear.xml")
     parser.createStructure("D://parse")
