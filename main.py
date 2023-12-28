@@ -38,11 +38,19 @@ class OpenPlcParser:
         for type in datatypes:
             print(type.get("name"))
 
-    def showPous(self):
+    def showPouStructure(self):
         #self.__pous=[pou for pou in self.__project.types.pous.children if pou.name is not None]
-        for pou in self.__pous:
-            print(f"The pou name is {pou.get('name')} and its type is {pou.get('pouType')}")
+        elements=[element for element in self.__project.types.pous.pou.children if element.name is not None]
+        for element in elements:
+            print(element.name)
 
+    def savePous(self,path):
+        self.__createRootDirectory(dir_path=path)
+        for pou in self.__pous:
+            with open(f'{path}//{pou.get("name")}.xml','w',encoding='utf-8') as file:
+                file.write(str(pou))
+                file.flush()
+                file.close()
     def showPouAttributes(self):
         for pou in self.__pous:
             print(pou.attrs)
@@ -161,9 +169,8 @@ class OpenPlcParser:
 
 if __name__ == '__main__':
     parser=OpenPlcParser("D://export.xml")
-    #parser.showTopLevel()
-
+    parser.savePous("D://parse//pous")
     # parser.showPous()
-    parser.parsePous()
-    parser.clearPous("D://parse//clear.xml")
-    parser.createStructure("D://parse")
+    # parser.parsePous()
+    # parser.clearPous("D://parse//clear.xml")
+    # parser.createStructure("D://parse")
