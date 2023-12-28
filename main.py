@@ -51,6 +51,12 @@ class OpenPlcParser:
                 file.write(str(pou))
                 file.flush()
                 file.close()
+
+    def saveCopyObjTree(self):
+         with open(f"D://parse//originalObjTree.xml",'w',encoding='utf-8') as savefile:
+             savefile.write(str(self.__parsing_tree))
+             savefile.flush()
+             savefile.close()
     def showPouAttributes(self):
         for pou in self.__pous:
             print(pou.attrs)
@@ -79,6 +85,7 @@ class OpenPlcParser:
         # self.__parsing_tree.prettify()
         with open(clearxml_path,encoding="utf-8",mode="w") as clearxml:
              clearxml.write(str(self.__parsing_tree))
+             clearxml.flush()
              clearxml.close()
 
 
@@ -88,7 +95,8 @@ class OpenPlcParser:
 if __name__ == '__main__':
     parser=OpenPlcParser("D://export.xml")
     parser.savePous("D://parse//pous")
+    parser.saveCopyObjTree()
     # parser.showPous()
     # parser.parsePous()
-    # parser.clearPous("D://parse//clear.xml")
+    parser.clearPous("D://parse//clear.xml")
     # parser.createStructure("D://parse")
