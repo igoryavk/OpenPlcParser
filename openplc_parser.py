@@ -47,13 +47,13 @@ class OpenPlcParser:
     def savePous(self,path):
         self.__createRootDirectory(dir_path=path)
         for pou in self.__pous:
-            with open(f'{path}//{pou.get("name")}.xml','w',encoding='utf-8') as file:
-                file.write(str(pou))
-                file.flush()
-                file.close()
+            with open(f'{path}//{pou.get("name")}.xml','a',encoding='utf-8') as file:
+                  file.write(pou.text)
+                  file.flush()
+                  file.close()
 
     def saveCopyObjTree(self):
-         with open(f"D://parse//originalObjTree.xml",'w',encoding='utf-8') as savefile:
+         with open(f"D://parse//originalObjTree.xml",'w',encoding='utf-8-sig') as savefile:
              savefile.write(str(self.__parsing_tree))
              savefile.flush()
              savefile.close()
@@ -76,27 +76,43 @@ class OpenPlcParser:
 
 
     def clearPous(self,clearxml_path):
-        pous=self.__parsing_tree.types.pous
-        pous.decompose()
+        pous=self.__parsing_tree.findAll("pou")
+        for pou in pous:
+             pou.decompose()
         self.__parsing_tree.prettify()
         # list_pous=[pou for pou in self.__pous if pou.name is not None]
         # for pou in list_pous:
         #     pou.decompose()
         # self.__parsing_tree.prettify()
-        with open(clearxml_path,encoding="utf-8",mode="w") as clearxml:
+        with open(clearxml_path,encoding="utf-8-sig",mode="w") as clearxml:
              clearxml.write(str(self.__parsing_tree))
              clearxml.flush()
              clearxml.close()
 
+    def createNewTree(self):
+        saved=Soup()
+        pous = self.__parsing_tree.project.types.pous
+        dir="D://parse//pous"
+        name=os.listdir(dir)[0]
+
+        pou_string=self.__getPouFromFile(f"{dir}//{name}")
+        pou=saved.new_tag("pou")
+        pou["name"]=name
+        pou["pouType"]="program"
+        pou.prettify()
+        pous.append(pou)
+
+        self.__parsing_tree.prettify()
+
+        with open("D://parse//newtree.xml","w",encoding="utf-8") as newtree:
+            newtree.write(str(self.__parsing_tree).replace("&lt;","<").replace("&gt;",">"))
+            newtree.flush()
+            newtree.close()
 
 
+    def __getPouFromFile(self,name):
+        with open(name,mode='r',encoding="utf-8-sig") as file:
+            content=file.read()
 
+        return content
 
-if __name__ == '__main__':
-    parser=OpenPlcParser("D://export.xml")
-    parser.savePous("D://parse//pous")
-    parser.saveCopyObjTree()
-    # parser.showPous()
-    # parser.parsePous()
-    parser.clearPous("D://parse//clear.xml")
-    # parser.createStructure("D://parse")
